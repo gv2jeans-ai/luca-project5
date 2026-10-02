@@ -3,200 +3,325 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LUCA 기반 생태 탐구 프로젝트 센터</title>
+    <title>LUCA 생태 탐사 프로그램 설계 시스템</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        :root {
-            --primary: #2E7D32;
-            --primary-light: #E8F5E9;
-            --secondary: #1B5E20;
-            --bg: #F4F6F8;
-            --card-bg: #FFFFFF;
-            --text: #333333;
-        }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Pretendard', sans-serif; }
-        body { background-color: var(--bg); color: var(--text); padding: 20px; }
-        .container { max-width: 1000px; margin: 0 auto; }
-
-        header { text-align: center; margin-bottom: 30px; }
-        header h1 { color: var(--primary); margin-bottom: 8px; }
-        header p { color: #666; font-size: 0.95rem; }
-
-        .section-title { font-size: 1.1rem; font-weight: bold; margin: 20px 0 10px; color: var(--secondary); }
-
-        /* 권역 선택 버튼 */
-        .region-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
-        .region-btn {
-            padding: 12px; border: 2px solid #ddd; background: var(--card-bg);
-            border-radius: 8px; cursor: pointer; font-weight: bold; transition: all 0.2s;
-        }
-        .region-btn.active, .region-btn:hover {
-            border-color: var(--primary); background: var(--primary-light); color: var(--primary);
-        }
-
-        /* 과목 선택 탭 */
-        .subject-tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-top: 10px; }
-        .tab-btn {
-            padding: 10px 18px; border: none; background: #E0E0E0; border-radius: 20px;
-            cursor: pointer; white-space: nowrap; font-weight: bold;
-        }
-        .tab-btn.active { background: var(--primary); color: white; }
-
-        /* 차시별 카드 및 다운로드 목록 */
-        .dashboard { margin-top: 25px; }
-        .card {
-            background: var(--card-bg); border-radius: 10px; padding: 20px; margin-bottom: 15px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center;
-        }
-        .card-info h3 { font-size: 1.05rem; margin-bottom: 6px; }
-        .card-info p { font-size: 0.85rem; color: #666; }
-        .card-tag { display: inline-block; padding: 3px 8px; background: #EEE; border-radius: 4px; font-size: 0.75rem; margin-right: 5px; }
-
-        .download-btns { display: flex; gap: 8px; }
-        .btn-dl {
-            padding: 8px 14px; border: none; border-radius: 6px; cursor: pointer;
-            text-decoration: none; font-size: 0.85rem; font-weight: bold; display: inline-block;
-        }
-        .btn-plan { background: #E3F2FD; color: #1565C0; }
-        .btn-guide { background: #FFF3E0; color: #E65100; }
-        .btn-dl:hover { opacity: 0.8; }
+        .active-card { border-color: #10b981 !important; background-color: #ecfdf5 !important; box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2); }
     </style>
 </head>
-<body>
+<body class="bg-slate-50 text-slate-800 font-sans">
+    <div id="app-container" class="max-w-xl mx-auto min-h-screen bg-white shadow-md flex flex-col">
+        <!-- 헤더 (Step 1 이상일 때만 표시) -->
+        <header id="app-header" class="bg-emerald-600 text-white p-4 shadow-sm flex justify-between items-center hidden">
+            <h1 class="font-bold text-lg">🌿 LUCA 생태 탐사 설계</h1>
+            <span class="text-xs bg-emerald-700 px-2 py-1 rounded">교사용 모드</span>
+        </header>
 
-<div class="container">
-    <header>
-        <h1>🌱 LUCA 기반 생태 탐구 프로젝트 센터</h1>
-        <p>권역 및 교과별 '앎-함-삶' 지도안 및 학생용 가이드북 다운로드 Hub</p>
-    </header>
+        <!-- Step 인디케이터 (Step 1 이상일 때만 표시) -->
+        <div id="app-nav" class="bg-slate-100 p-3 border-b flex justify-between text-xs font-semibold text-slate-500 overflow-x-auto hidden">
+            <span id="step-nav-1" class="text-emerald-600 font-bold">1. 학교급</span>
+            <span>›</span>
+            <span id="step-nav-2">2. 권역</span>
+            <span>›</span>
+            <span id="step-nav-3">3. 과목</span>
+            <span>›</span>
+            <span id="step-nav-4">4. 프로젝트</span>
+            <span>›</span>
+            <span id="step-nav-5">5. 전문가</span>
+        </div>
 
-    <!-- 1. 권역 선택 -->
-    <div class="section-title">1. 탐사 권역 선택</div>
-    <div class="region-grid" id="regionGrid">
-        <button class="region-btn active" onclick="selectRegion('경기 북부 (DMZ)')">경기 북부 (DMZ)</button>
-        <button class="region-btn" onclick="selectRegion('경기 서해안 (갯벌)')">경기 서해안 (갯벌)</button>
-        <button class="region-btn" onclick="selectRegion('경기 동부 (수계)')">경기 동부 (수계)</button>
-        <button class="region-btn" onclick="selectRegion('경기 남부 (도심)')">경기 남부 (도심)</button>
+        <!-- 메인 콘텐츠 영역 -->
+        <main id="main-content" class="flex-1 flex flex-col"></main>
+
+        <!-- 푸터 버튼 (Step 1 이상일 때만 표시) -->
+        <footer id="footer-buttons" class="p-4 border-t bg-white flex justify-between gap-3 hidden">
+            <button id="btn-prev" onclick="changeStep(-1)" class="flex-1 py-3 border rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-50 hidden">이전</button>
+            <button id="btn-next" onclick="changeStep(1)" class="flex-1 py-3 bg-emerald-600 text-white rounded-xl text-sm font-bold shadow hover:bg-emerald-700">다음 단계 ></button>
+        </footer>
     </div>
 
-    <!-- 2. 교과 선택 -->
-    <div class="section-title">2. 교과 선택</div>
-    <div class="subject-tabs" id="subjectTabs"></div>
+    <script>
+        const SCHOOL_LEVELS = [
+            { id: 'middle', name: '중학교', desc: '기초 생태 탐구 및 시각 자료·체험 중심 프로젝트' },
+            { id: 'high', name: '고등학교', desc: '심화 데이터 분석, 학술 심층 탐구 및 입법·정책 연계 프로젝트' }
+        ];
 
-    <!-- 3. 차시별 자료 목록 -->
-    <div class="dashboard">
-        <div class="section-title" id="dashboardTitle">차시별 지도안 및 가이드북</div>
-        <div id="cardList"></div>
-    </div>
-</div>
+        const SUBJECTS = [
+            { id: 'kor', level: 'middle', dept: '국어과', name: '국어', code: '[9국03-04]', desc: '설득하는 글쓰기, 환경 비평 및 공익광고 카피 작성' },
+            { id: 'math', level: 'middle', dept: '수학과', name: '수학', code: '[9수04-08]', desc: '생태 데이터 통계 분석, 기하학적 최소 거리 분석 및 수학 모델링' },
+            { id: 'eng', level: 'middle', dept: '영어과', name: '영어', code: '[9영04-02]', desc: '글로벌 연설문 작성, 영문 카드뉴스 및 친환경 가이드북 제작' },
+            { id: 'sci', level: 'middle', dept: '과학과', name: '과학', code: '[9과05-04]', desc: '지표생물 관찰, 수질 오염 및 도심 서식지 파편화 영향 탐구' },
+            { id: 'geo', level: 'middle', dept: '사회과', name: '사회 (지리)', code: '[9사07-02]', desc: '기후 난민 인권, 도시 재개발 공간 정비 및 자원 순환 시스템 탐구' },
+            { id: 'pol', level: 'middle', dept: '사회과', name: '사회 (정치)', code: '[9사09-02]', desc: '생태계 보호 조례안 제정, 주민 참여형 공청회 및 환경권 분석' },
+            { id: 'env', level: 'middle', dept: '환경과', name: '환경', code: '[9환경02-02]', desc: '생태계 건강성 진단, 비오톱 조성 및 탄소중립 실천 프로젝트' },
+            { id: 'eth', level: 'middle', dept: '도덕과', name: '도덕', code: '[9도03-01]', desc: '생명 공동체 윤리 성찰, 기후 정의 실천 및 친환경 소비 윤리' },
+            { id: 'art', level: 'middle', dept: '미술과', name: '미술', code: '[9미02-03]', desc: '팝아트 포스터, 공공 미술 비오톱 설계, 업사이클링 정크아트' },
+            { id: 'tech', level: 'middle', dept: '기술·가정', name: '기술·가정', code: '[9기02-06]', desc: '저탄소 식단 개발, 업사이클링 패션, 스마트 그린 홈 적정기술 설계' },
+            { id: 'kor_h', level: 'high', dept: '국어과', name: '공통국어', code: '[10공국02-02]', desc: '생태 심층 학술 논평 작성 및 환경 매체 비평 프로젝트' },
+            { id: 'math_h', level: 'high', dept: '수학과', name: '공통수학', code: '[10공수01-03]', desc: '생태계 개체 수 변화 함수 모델링 및 수치 분석' },
+            { id: 'sci_h', level: 'high', dept: '과학과', name: '통합과학', code: '[10통과05-02]', desc: '군집 생물 다양성 지수 산출 및 수생태계 변화 추적' },
+            { id: 'exp_h', level: 'high', dept: '과학과', name: '과학탐구실험', code: '[10과탐01-02]', desc: '현장 시료 채취, 지표종 동정 및 실험실 정량 데이터 측정' },
+            { id: 'soc_h', level: 'high', dept: '사회과', name: '통합사회', code: '[10통사02-03]', desc: '지역 환경권 분석, 생태 보전 입법 청원 및 공간 정비안 기획' },
+            { id: 'his_h', level: 'high', dept: '사회과', name: '한국사', code: '[10한사03-01]', desc: '지역 생태 환경 변화의 역사적 변천 및 근대화에 따른 수계 영향 연구' }
+        ];
 
-<script>
-    // 과목 및 4개 차시별 전체 교과 데이터 세트
-    const projectData = {
-        "수학": [
-            { step: "1차시 (앎)", title: "생물다양성 지수(Simpson)와 통계적 대푯값 이해", desc: "도심 생태 파편화 원리와 수학적 대푯값 지수 공식 이해", plan: "plan_math_1.pdf", guide: "guide_math_1.pdf" },
-            { step: "2~3차시 (함-1)", title: "LUCA 앱 GPS 현장 탐사 및 교란종 데이터 수집", desc: "GPS 기반 위치 데이터 취득 및 생물종 수집 통계화", plan: "plan_math_2.pdf", guide: "guide_math_2.pdf" },
-            { step: "4~5차시 (함-2)", title: "알지오매스/이지통계 활용 상관관계(산점도) 분석", desc: "수집 데이터 시각화 및 생물다양성 상관관계 도출", plan: "plan_math_3.pdf", guide: "guide_math_3.pdf" },
-            { step: "6차시 (삶)", title: "통계 기반 생태 보전 정책 제안 및 발표", desc: "분석 데이터를 바탕으로 한 지자체 생태 정책 입안", plan: "plan_math_4.pdf", guide: "guide_math_4.pdf" }
-        ],
-        "국어": [
-            { step: "1차시 (앎)", title: "생태 관련 매체 자료 분석 및 비판적 읽기", desc: "환경 문제 기사 및 매체 텍스트의 비판적 해석", plan: "plan_kor_1.pdf", guide: "guide_kor_1.pdf" },
-            { step: "2~3차시 (함-1)", title: "LUCA 앱 활용 현장 취재 및 생태 기록", desc: "현장 생태 탐색 활동 인터뷰 및 취재 일지 작성", plan: "plan_kor_2.pdf", guide: "guide_kor_2.pdf" },
-            { step: "4~5차시 (함-2)", title: "생태 보고서 및 공익 연설문 작성", desc: "취재 내용을 바탕으로 한 설득적 텍스트 및 보고서 작성", plan: "plan_kor_3.pdf", guide: "guide_kor_3.pdf" },
-            { step: "6차시 (삶)", title: "생태 평화 연설회 및 카드뉴스 공유", desc: "작성한 공익 연설문 발표 및 카드뉴스 제작 공유", plan: "plan_kor_4.pdf", guide: "guide_kor_4.pdf" }
-        ],
-        "과학": [
-            { step: "1차시 (앎)", title: "서식지 파편화 및 수생태계 지표종 이해", desc: "환경 변화에 따른 지표생물과 먹이사슬 영향 파악", plan: "plan_sci_1.pdf", guide: "guide_sci_1.pdf" },
-            { step: "2~3차시 (함-1)", title: "LUCA 앱 GPS 기반 생물종 모니터링", desc: "현장 수생태계 지표종 모니터링 및 GPS 매핑", plan: "plan_sci_2.pdf", guide: "guide_sci_2.pdf" },
-            { step: "4~5차시 (함-2)", title: "먹이그물 변형 모델링 및 서식지 분석", desc: "데이터 기반 파편화 서식지의 생태계 모델링", plan: "plan_sci_3.pdf", guide: "guide_sci_3.pdf" },
-            { step: "6차시 (삶)", title: "도시 숲 생태 통로 설계안 발표 및 실천", desc: "생물다양성 보전을 위한 생태통로 구현안 제안", plan: "plan_sci_4.pdf", guide: "guide_sci_4.pdf" }
-        ],
-        "사회": [
-            { step: "1차시 (앎)", title: "도심 생태 파편화와 공간 재개발 이해", desc: "도시화에 따른 생태계 파편화 및 사회적 영향 분석", plan: "plan_soc_1.pdf", guide: "guide_soc_1.pdf" },
-            { step: "2~3차시 (함-1)", title: "LUCA 앱 활용 지역 공간 현장 조사", desc: "지역 재개발 구역 및 녹지 공간의 현장 조사", plan: "plan_soc_2.pdf", guide: "guide_soc_2.pdf" },
-            { step: "4~5차시 (함-2)", title: "친환경 도시 재생 공간 기획서 작성", desc: "지속가능한 도시 생태 공간 기획 및 조례안 입안", plan: "plan_soc_3.pdf", guide: "guide_soc_3.pdf" },
-            { step: "6차시 (삶)", title: "지자체 입법 청원 및 정책 발표", desc: "지자체 제출용 정책 제안서 및 입법 청원회 진행", plan: "plan_soc_4.pdf", guide: "guide_soc_4.pdf" }
-        ],
-        "영어": [
-            { step: "1차시 (앎)", title: "글로벌 멸종위기 생물 및 기후위기 자료 분석", desc: "해외 생태 복원 사례 읽기 및 관련 영단어/표현 학습", plan: "plan_eng_1.pdf", guide: "guide_eng_1.pdf" },
-            { step: "2~3차시 (함-1)", title: "LUCA 앱 활용 영문 생태 도감 작성", desc: "현장 탐사 생물종 데이터 취득 및 영문 스펙 시트 작성", plan: "plan_eng_2.pdf", guide: "guide_eng_2.pdf" },
-            { step: "4~5차시 (함-2)", title: "글로벌 캠페인 영문 인포그래픽 제작", desc: "권역별 생태 문제 해결을 위한 영문 카드뉴스 및 메시지 작성", plan: "plan_eng_3.pdf", guide: "guide_eng_3.pdf" },
-            { step: "6차시 (삶)", title: "세계 시민을 위한 글로벌 생태 스피치", desc: "영문 연설문 발표 및 제로웨이스트 영문 가이드북 공유", plan: "plan_eng_4.pdf", guide: "guide_eng_4.pdf" }
-        ],
-        "환경/도덕": [
-            { step: "1차시 (앎)", title: "생명 공동체 윤리 및 세대 간 정의 이해", desc: "생태 윤리 가치관 형성 및 인간 중심주의 비판적 성찰", plan: "plan_env_1.pdf", guide: "guide_env_1.pdf" },
-            { step: "2~3차시 (함-1)", title: "LUCA 앱 활용 학교 주변 비오톱 진단", desc: "서식지 연결성 평가 및 탄소발자국 현장 모니터링", plan: "plan_env_2.pdf", guide: "guide_env_2.pdf" },
-            { step: "4~5차시 (함-2)", title: "학교 생태 비오톱 및 탄소중립 모델 설계", desc: "학교 및 지역사회에 적용 가능한 생태 비오톱 조성안 작성", plan: "plan_env_3.pdf", guide: "guide_env_3.pdf" },
-            { step: "6차시 (삶)", title: "생태 윤리 헌장 선포 및 실천 일지 작성", desc: "생태적 삶을 위한 다짐 헌장 제정 및 구체적 실천 일지 공유", plan: "plan_env_4.pdf", guide: "guide_env_4.pdf" }
-        ],
-        "미술/기술가정": [
-            { step: "1차시 (앎)", title: "적정기술과 저탄소 주거/식생활 이해", desc: "환경친화적 공간 디자인 및 업사이클링 미학 이해", plan: "plan_art_1.pdf", guide: "guide_art_1.pdf" },
-            { step: "2~3차시 (함-1)", title: "LUCA 앱 활용 지역 생태 자원 디자인 탐색", desc: "현장 매체 및 자원 모니터링을 통한 미적/기술적 요소 수집", plan: "plan_art_2.pdf", guide: "guide_art_2.pdf" },
-            { step: "4~5차시 (함-2)", title: "업사이클링 조형물 및 저탄소 레시피북 제작", desc: "정크아트 공공미술 시안 작성 및 로컬푸드 식단 디자인", plan: "plan_art_3.pdf", guide: "guide_art_3.pdf" },
-            { step: "6차시 (삶)", title: "생태 공공 미술 전시 및 적정기술 제안회", desc: "산출물 공동 전시, 팝아트 포스터 공유 및 제안서 발표", plan: "plan_art_4.pdf", guide: "guide_art_4.pdf" }
-        ]
-    };
+        const ZONES = [
+            { id: 'north', name: '경기 북부 접경/DMZ 권역', cities: '파주, 연천, 철원, 김포, 고양 등', desc: '생태평화, 접경지역 특유 자생 생물군집 및 교란종 모니터링' },
+            { id: 'east', name: '경기 동부 남한강·산악 권역', cities: '가평, 양평, 여주, 광주, 남양주 등', desc: '한강 수계·내륙습지 생태계, 지표종 및 외래 교란종 영향 분석' },
+            { id: 'west', name: '경기 서해안 갯벌·공단 권역', cities: '안산, 시흥, 화성, 평택 등', desc: '연안 습지 저서생물, 갯벌 생물다양성 및 연안 침식 복원' },
+            { id: 'south', name: '경기 남부 도심·내륙 권역', cities: '수원, 용인, 성남, 안양, 부천 등', desc: '고밀도 도시화에 따른 도심 숲·하천 생태 파편화 및 다양성 지수' }
+        ];
 
-    let currentRegion = "경기 북부 (DMZ)";
-    let currentSubject = "수학";
+        const EXPERTS = [
+            { id: 1, name: '박OO 연구원', field: '환경정책 / 입법 청원', desc: '데이터 기반 정책 제안 및 조례 청원 멘토' },
+            { id: 2, name: '김OO 박사', field: '생태학 / 종 분류학', desc: '현장 생태 탐사 및 야생 동식물 동정 지도' },
+            { id: 3, name: '이OO 교수', field: '생태통계학 / 데이터분석', desc: '생물 빅데이터 정제 및 종 다양성 지수 계산' },
+            { id: 4, name: '최OO 작가', field: '생태 문화 / 융합예술', desc: '미디어아트, 에코 사운드 스케이프 및 콘텐츠 제작' }
+        ];
 
-    // 권역 선택
-    function selectRegion(regionName) {
-        currentRegion = regionName;
-        document.querySelectorAll('.region-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.innerText === regionName);
-        });
-        renderCards();
-    }
+        const PROJECT_MAP = {
+            south: {
+                sci: { title: '📌 도심 서식지 파편화에 따른 생물 다양성 감소 영향 탐구', tasks: ['도시 숲 생태 통로 설계안 작성', '생물 다양성 보전 활동 계획서 수립'] }
+            }
+        };
 
-    // 탭 생성 및 교과 선택
-    function initTabs() {
-        const tabContainer = document.getElementById('subjectTabs');
-        tabContainer.innerHTML = '';
-        Object.keys(projectData).forEach((subject, idx) => {
-            const btn = document.createElement('button');
-            btn.className = `tab-btn ${idx === 0 ? 'active' : ''}`;
-            btn.innerText = subject;
-            btn.onclick = () => {
-                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                currentSubject = subject;
-                renderCards();
-            };
-            tabContainer.appendChild(btn);
-        });
-    }
+        // 초기 상태: 0은 시작화면
+        let currentStep = 0;
+        let selectedSchool = SCHOOL_LEVELS[0];
+        let selectedZone = ZONES[3]; // 경기 남부 기본선택
+        let selectedSubject = SUBJECTS[3]; // 과학 기본선택
+        let selectedExpert = EXPERTS[0];
+        let selectedDate = '2026-10-14';
 
-    // 카드 목록 및 다운로드 버튼 렌더링
-    function renderCards() {
-        const listContainer = document.getElementById('cardList');
-        document.getElementById('dashboardTitle').innerText = `${currentRegion} > [${currentSubject}] 차시별 지도안 및 가이드북`;
-        listContainer.innerHTML = '';
+        function getPdfFileName(type) {
+            const isMiddle = selectedSchool.id === 'middle';
+            if (type === 'guide') return isMiddle ? './middle_guide1.pdf' : './high_guide1.pdf';
+            return isMiddle ? './middle_guide2.pdf' : './high_guide2.pdf';
+        }
 
-        const items = projectData[currentSubject] || [];
-        items.forEach(item => {
-            const card = document.createElement('div');
-            card.className = 'card';
-            card.innerHTML = `
-                <div class="card-info">
-                    <div><span class="card-tag">${item.step}</span></div>
-                    <h3>${item.title}</h3>
-                    <p>${item.desc}</p>
-                </div>
-                <div class="download-btns">
-                    <!-- docs/ 폴더에 연결된 파일 다운로드 -->
-                    <a href="docs/${item.plan}" download class="btn-dl btn-plan">📄 지도안</a>
-                    <a href="docs/${item.guide}" download class="btn-dl btn-guide">📘 가이드북</a>
-                </div>
-            `;
-            listContainer.appendChild(card);
-        });
-    }
+        function render() {
+            const header = document.getElementById('app-header');
+            const nav = document.getElementById('app-nav');
+            const footer = document.getElementById('footer-buttons');
+            const main = document.getElementById('main-content');
 
-    // 초기화
-    initTabs();
-    renderCards();
-</script>
+            // Step 0(시작화면)일 때 상단/하단 제어바 숨김
+            if (currentStep === 0) {
+                header.classList.add('hidden');
+                nav.classList.add('hidden');
+                footer.classList.add('hidden');
 
+                main.className = "flex-1 flex flex-col justify-between p-6 bg-gradient-to-b from-emerald-500 via-emerald-600 to-teal-800 text-white text-center";
+                main.innerHTML = `
+                    <div class="pt-8">
+                        <span class="bg-white/20 text-white text-xs px-3 py-1 rounded-full font-semibold border border-white/30">경기 남부 도심 생태 탐사</span>
+                        <h1 class="text-3xl font-extrabold mt-4 tracking-tight">LUCA 생태 탐사</h1>
+                        <p class="text-xs text-emerald-100 mt-2 font-light">도시화에 따른 생태 파편화와 생물다양성 지도</p>
+                    </div>
+
+                    <div class="my-6 my-auto">
+                        <!-- 이미지 태그 src 부분에 원하시는 이미지 파일명(예: ./bg.jpg)을 넣으실 수 있습니다 -->
+                        <div class="relative mx-auto w-full max-w-xs rounded-2xl overflow-hidden shadow-2xl border-2 border-white/20">
+                            <img src="https://images.unsplash.com/photo-1511497584788-8767610419ea?auto=format&fit=crop&w=600&q=80" alt="도심 생태계 이미지" class="w-full h-52 object-cover" />
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex items-end p-4">
+                                <p class="text-xs text-white text-left font-medium">우리 동네 도심 숲과 생태계를 기록하고 탐구해보세요 🌿</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pb-6 space-y-3">
+                        <button onclick="startApp()" class="w-full py-4 bg-white text-emerald-700 font-extrabold text-base rounded-2xl shadow-lg hover:bg-emerald-50 transition transform active:scale-95">
+                            🌱 탐사 설계 시작하기
+                        </button>
+                        <p class="text-[10px] text-emerald-200">OO중학교 과학과 시범수업 전용 시스템 v1.0</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Step 1 이상일 때 상단/하단 제어바 표시
+            header.classList.remove('hidden');
+            nav.classList.remove('hidden');
+            main.className = "flex-1 p-5";
+
+            for (let i = 1; i <= 5; i++) {
+                const navEl = document.getElementById(`step-nav-${i}`);
+                if (navEl) navEl.className = i <= currentStep ? 'text-emerald-600 font-bold' : 'text-slate-400';
+            }
+
+            const btnPrev = document.getElementById('btn-prev');
+            const btnNext = document.getElementById('btn-next');
+
+            if (currentStep === 1) btnPrev.classList.add('hidden');
+            else btnPrev.classList.remove('hidden');
+
+            if (currentStep === 5) btnNext.innerText = '최종 예약 완료';
+            else btnNext.innerText = '다음 단계 >';
+
+            if (currentStep === 6) footer.classList.add('hidden');
+            else footer.classList.remove('hidden');
+
+            if (currentStep === 1) {
+                main.innerHTML = `
+                    <div class="space-y-4">
+                        <h2 class="text-lg font-bold text-slate-800">STEP 1. 학교급을 선택하세요</h2>
+                        <div class="space-y-3">
+                            ${SCHOOL_LEVELS.map(s => `
+                                <div onclick="selectSchool('${s.id}')" class="p-4 border rounded-xl cursor-pointer transition ${selectedSchool.id === s.id ? 'active-card' : 'hover:border-slate-300'}">
+                                    <h3 class="font-bold text-slate-800 text-base">${s.name}</h3>
+                                    <p class="text-xs text-slate-600 mt-1">${s.desc}</p>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            } else if (currentStep === 2) {
+                main.innerHTML = `
+                    <div class="space-y-4">
+                        <h2 class="text-lg font-bold text-slate-800">STEP 2. 탐사 권역을 선택하세요</h2>
+                        <div class="space-y-2">
+                            ${ZONES.map(z => `
+                                <div onclick="selectZone('${z.id}')" class="p-4 border rounded-xl cursor-pointer transition ${selectedZone.id === z.id ? 'active-card' : 'hover:border-slate-300'}">
+                                    <h3 class="font-bold text-slate-800">${z.name}</h3>
+                                    <p class="text-xs text-emerald-600 font-medium mt-0.5">지역: ${z.cities}</p>
+                                    <p class="text-xs text-slate-500 mt-1">${z.desc}</p>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            } else if (currentStep === 3) {
+                const filtered = SUBJECTS.filter(s => s.level === selectedSchool.id);
+                main.innerHTML = `
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-end">
+                            <div>
+                                <h2 class="text-lg font-bold text-slate-800">STEP 3. 담당 과목을 선택하세요</h2>
+                                <span class="text-xs text-emerald-600 font-medium">선택된 학교급: ${selectedSchool.name}</span>
+                            </div>
+                            <span class="text-xs text-slate-500">총 ${filtered.length}개 교과</span>
+                        </div>
+                        <div class="space-y-2 max-h-[440px] overflow-y-auto pr-1">
+                            ${filtered.map(sub => `
+                                <div onclick="selectSubject('${sub.id}')" class="p-3.5 border rounded-xl cursor-pointer transition ${selectedSubject.id === sub.id ? 'active-card' : 'hover:border-slate-300'}">
+                                    <div class="flex justify-between items-center mb-1">
+                                        <span class="text-xs font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded">${sub.dept}</span>
+                                        <span class="text-xs font-mono text-slate-400">${sub.code}</span>
+                                    </div>
+                                    <h3 class="font-bold text-slate-800 text-sm">${sub.name}</h3>
+                                    <p class="text-xs text-slate-600 mt-0.5">${sub.desc}</p>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            } else if (currentStep === 4) {
+                const proj = PROJECT_MAP[selectedZone.id]?.[selectedSubject.id] || {
+                    title: '📌 경기 남부 도시화에 따른 생태 파편화와 생물다양성 지수 분석',
+                    tasks: ['루카 앱 활용 도심 생물 현장 탐사', '엑셀 수식 활용 종 풍부도 및 생물다양성 지수 산출', '우리 동네 숲 가꾸기 정책 제안서 작성']
+                };
+
+                const guideFile = getPdfFileName('guide');
+                const studentFile = getPdfFileName('student');
+
+                main.innerHTML = `
+                    <div class="space-y-4">
+                        <h2 class="text-lg font-bold text-slate-800">STEP 4. 맞춤형 프로젝트 확인</h2>
+                        <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 space-y-3">
+                            <div class="flex items-center space-x-2">
+                                <span class="bg-emerald-600 text-white text-xs px-2 py-0.5 rounded">매칭 완료</span>
+                                <h3 class="font-bold text-emerald-900 text-sm">[${selectedSchool.name}] ${selectedZone.name} x ${selectedSubject.name}</h3>
+                            </div>
+                            <div class="bg-white p-3.5 rounded-lg border text-sm space-y-2">
+                                <p class="font-bold text-slate-800">${proj.title}</p>
+                                <div class="text-xs font-semibold text-slate-500 mt-2">주요 산출물 및 활동:</div>
+                                <ul class="text-xs text-slate-600 list-disc list-inside space-y-1">
+                                    ${proj.tasks.map(t => `<li>${t}</li>`).join('')}
+                                </ul>
+                            </div>
+                            <div class="flex gap-2">
+                                <a href="${guideFile}" download="${selectedSchool.name}_지도안.pdf" target="_blank" class="flex-1 bg-white border border-slate-300 text-slate-800 text-xs py-2 rounded-lg font-medium hover:bg-slate-50 text-center flex items-center justify-center">📄 지도안 다운로드</a>
+                                <a href="${studentFile}" download="${selectedSchool.name}_학생용가이드.pdf" target="_blank" class="flex-1 bg-white border border-slate-300 text-slate-800 text-xs py-2 rounded-lg font-medium hover:bg-slate-50 text-center flex items-center justify-center">📱 학생용 가이드</a>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (currentStep === 5) {
+                main.innerHTML = `
+                    <div class="space-y-4">
+                        <h2 class="text-lg font-bold text-slate-800">STEP 5. 전문가 매칭 및 일정 선택</h2>
+                        <div class="space-y-3">
+                            <label class="block text-xs font-bold text-slate-600">지원 전문가 선택</label>
+                            ${EXPERTS.map(exp => `
+                                <div onclick="selectExpert(${exp.id})" class="p-3 border rounded-lg cursor-pointer transition ${selectedExpert.id === exp.id ? 'active-card' : 'hover:border-slate-300'}">
+                                    <div class="font-bold text-sm">${exp.name} <span class="text-xs font-normal text-slate-500">(${exp.field})</span></div>
+                                    <div class="text-xs text-slate-600">${exp.desc}</div>
+                                </div>
+                            `).join('')}
+
+                            <label class="block text-xs font-bold text-slate-600 mt-4">수업 희망 일자</label>
+                            <input type="date" value="${selectedDate}" onchange="selectedDate=this.value" class="w-full p-2 border rounded-lg text-sm bg-white" />
+                        </div>
+                    </div>
+                `;
+            } else if (currentStep === 6) {
+                const packageFile = getPdfFileName('guide');
+
+                main.innerHTML = `
+                    <div class="text-center py-6 space-y-4">
+                        <div class="text-4xl">🎉</div>
+                        <h2 class="text-xl font-bold text-slate-800">프로젝트 예약 완료!</h2>
+                        <p class="text-xs text-slate-500">선택하신 조건으로 수업 패키지 생성이 완료되었습니다.</p>
+                        <div class="bg-slate-50 border p-4 rounded-xl text-left text-xs space-y-2">
+                            <div><span class="font-bold">학교급:</span> ${selectedSchool.name}</div>
+                            <div><span class="font-bold">권역:</span> ${selectedZone.name}</div>
+                            <div><span class="font-bold">과목:</span> ${selectedSubject.name} (${selectedSubject.code})</div>
+                            <div><span class="font-bold">전문가:</span> ${selectedExpert.name} (${selectedExpert.field})</div>
+                            <div><span class="font-bold">일시:</span> ${selectedDate}</div>
+                        </div>
+                        <div class="space-y-2 pt-2">
+                            <a href="${packageFile}" download="${selectedSchool.name}_서류패키지.pdf" target="_blank" class="block w-full bg-emerald-600 text-white text-xs py-3 rounded-xl font-bold shadow hover:bg-emerald-700 text-center">📄 행정 결재용 서류 패키지 다운로드</a>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function startApp() {
+            currentStep = 1;
+            render();
+        }
+
+        function selectSchool(id) {
+            selectedSchool = SCHOOL_LEVELS.find(s => s.id === id);
+            const matchSubjects = SUBJECTS.filter(s => s.level === id);
+            if (matchSubjects.length > 0) selectedSubject = matchSubjects[0];
+            render();
+        }
+
+        function selectZone(id) {
+            selectedZone = ZONES.find(z => z.id === id);
+            render();
+        }
+
+        function selectSubject(id) {
+            selectedSubject = SUBJECTS.find(s => s.id === id);
+            render();
+        }
+
+        function selectExpert(id) {
+            selectedExpert = EXPERTS.find(e => e.id === id);
+            render();
+        }
+
+        function changeStep(delta) {
+            currentStep += delta;
+            if (currentStep < 1) currentStep = 1;
+            if (currentStep > 6) currentStep = 6;
+            render();
+        }
+
+        render();
+    </script>
 </body>
 </html>
